@@ -5,6 +5,7 @@ import { insert, search, remove } from "./BST.js";
 const router = express.Router();
 
 let books = [];
+let borrowedBooks = [];
 let root = null;
 
 function sortBooks(criteria) {
@@ -49,7 +50,7 @@ router.get("/", (req, res) => {
 
 router.post("/addbook", (req, res) => {
     try {
-        const { title, author, bookCountAvailable, publisher, bookStatus, categories, popularity } = req.body;
+        const { title, author, bookCountAvailable, publisher, bookStatus, popularity } = req.body;
 
         const id = books.length;
         const newBook = {
@@ -59,7 +60,6 @@ router.post("/addbook", (req, res) => {
             bookCountAvailable,
             publisher,
             bookStatus,
-            categories,
             popularity,
         };
         root = insert(root, newBook);
@@ -117,6 +117,10 @@ router.post("/requestbook", (req, res) => {
         }
         if (book.bookCountAvailable > 0) {
             book.bookCountAvailable -= 1;
+            borrowedBooks.push({
+                studentId,
+                book
+            });
             return res.status(200).json({
                 message: "Book issued successfully!",
                 book,
@@ -137,29 +141,31 @@ router.post("/requestbook", (req, res) => {
 router.post("/returnbook", (req, res) => {
     try {
         const { bookId } = req.body;
-        const book = books.find((b) => b.id === bookId);
-        if (!book) {
+        const bookBorrowed = borrowedBooks.find((b) => b.book.id === bookId);
+        if (!bookBorrowed) {
             return res.status(404).json("Book not found");
         }
-        book.bookCountAvailable += 1;
-
+        bookBorrowed.book.bookCountAvailable += 1;
+        borrowedBooks = borrowedBooks.filter((b) => b.book.id !== bookId || b !== bookBorrowed);
+        console.log(borrowedBooks)
         if (!requestQueue.isEmpty()) {
             const nextRequest = requestQueue.peek();
             if (nextRequest.bookId === bookId) {
                 requestQueue.dequeue();
-                book.bookCountAvailable -= 1;
+                bookBorrowed.bookCountAvailable -= 1;
                 return res.status(200).json({
                     message: `Book has been issued to the next student in the queue (Student ID: ${nextRequest.studentId}).`,
-                    book,
+                    bookBorrowed,
                 });
             }
         }
 
         res.status(200).json({
             message: "Book returned successfully!",
-            book,
+            bookBorrowed,
         });
     } catch (err) {
+        console.log(err)
         res.status(500).json(err);
     }
 });
