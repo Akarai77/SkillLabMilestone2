@@ -24,8 +24,8 @@ router.get("/", (req, res) => {
 
     GET /allbooks?sortBy=popularity/availability       # Displays all books sorted by popularity or availability (optional)
 
-    POST /addbook                          # Admin-only: Adds a new book to the system
-    { title, author, bookCountAvailable, publisher, bookStatus, categories, popularity }
+    POST /addbook                          # Adds a new book to the system
+    { title, author, bookCountAvailable, publisher, bookStatus, popularity }
 
     POST /requestbook                     # Adds a request to borrow a book
     { studentId, bookId }

@@ -27,7 +27,6 @@ function search(root, title) {
         : search(root.right, title);
 }
 
-// Remove function to delete a book from the BST
 function remove(root, title) {
     if (!root) return null;
 
